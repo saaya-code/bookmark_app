@@ -11,8 +11,10 @@ app.use(express.json());
 
 // Connect Database
 connectDB();
+
 app.get('/callback', (req, res) => {
   const { code, error } = req.query;
+  console.log(req);
 
   if (error) {
     console.error('Error during Spotify authorization:', error);
@@ -21,7 +23,7 @@ app.get('/callback', (req, res) => {
 
   if (code) {
     console.log('Authorization code received:', code);
-    return res.send('Authorization successful! You can now use the code to authenticate.');
+    return res.json({code: code});
   }
 
   res.status(400).send('No authorization code received.');
