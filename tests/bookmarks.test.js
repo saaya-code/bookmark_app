@@ -25,6 +25,8 @@ describe('Bookmark Routes', () => {
     const newBookmark = {
       userId: 'testUser',
       spotifyTrackId: 'testTrackId',
+      title: 'Test Title',
+      description: 'Test Description',
       startTime: 30,
       endTime: 60,
     };
@@ -35,6 +37,51 @@ describe('Bookmark Routes', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('_id');
-    expect(response.body.userId).toBe('testUser');
+    expect(response.body.title).toBe('Test Title');
+    expect(response.body.description).toBe('Test Description');
+  });
+
+  it('should update a bookmark', async () => {
+    const bookmark = new Bookmark({
+      userId: 'testUser',
+      spotifyTrackId: 'testTrackId',
+      title: 'Old Title',
+      description: 'Old Description',
+      startTime: 30,
+      endTime: 60,
+    });
+    await bookmark.save();
+
+    const updatedData = {
+      title: 'Updated Title',
+      description: 'Updated Description',
+      startTime: 40,
+      endTime: 70,
+    };
+
+    const response = await request(app)
+      .put(`/api/bookmarks/${bookmark._id}`)
+      .send(updatedData);
+
+    expect(response.status).toBe(200);
+    expect(response.body.title).toBe('Updated Title');
+    expect(response.body.description).toBe('Updated Description');
+  });
+
+  it('should delete a bookmark', async () => {
+    const bookmark = new Bookmark({
+      userId: 'testUser',
+      spotifyTrackId: 'testTrackId',
+      title: 'Title to Delete',
+      description: 'Description to Delete',
+      startTime: 30,
+      endTime: 60,
+    });
+    await bookmark.save();
+
+    const response = await request(app).delete(`/api/bookmarks/${bookmark._id}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe('Bookmark deleted successfully');
   });
 });
