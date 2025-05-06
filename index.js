@@ -4,6 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const axios = require('axios');
 const User = require('./models/User');
+const authMiddleware = require('./middleware/auth');
 
 const app = express();
 
@@ -77,6 +78,8 @@ app.get('/callback', async (req, res) => {
 
 // Define Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/bookmarks', authMiddleware);
+app.use('/api/auth/spotify', authMiddleware);
 app.use('/api/bookmarks', require('./routes/bookmarks'));
 
 if (process.env.NODE_ENV !== 'test') {

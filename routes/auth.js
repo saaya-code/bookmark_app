@@ -1,10 +1,14 @@
 const express = require('express');
 const axios = require('axios');
 const querystring = require('querystring');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const authMiddleware = require('../middleware/auth');
 const router = express.Router();
+
+// Middleware to protect routes
+router.use(authMiddleware);
 
 // User registration
 router.post('/register', async (req, res) => {
@@ -61,18 +65,20 @@ router.get('/spotify/link', (req, res) => {
   res.json({ url: authUrl });
 });
 
-// Spotify linking (updated to associate with existing user)
-router.post('/spotify', async (req, res) => {
-  const { code, userId } = req.body;
+// Route to link Spotify account
+router.post('/spotify', authMiddleware, async (req, res) => {
+  const { code } = req.body;
+  const userId = req.user.id; // Extracted from JWT
 
   try {
-    const response = await axios.post('https://accounts.spotify.com/api/token', querystring.stringify({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: process.env.SPOTIFY_REDIRECT_URI,
-      client_id: process.env.SPOTIFY_CLIENT_ID,
-      client_secret: process.env.SPOTIFY_CLIENT_SECRET,
-    }), {
+    const response = await axios.post('https://accounts.spotify.com/api/token', null, {
+      params: {
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: process.env.SPOTIFY_REDIRECT_URI,
+        client_id: process.env.SPOTIFY_CLIENT_ID,
+        client_secret: process.env.SPOTIFY_CLIENT_SECRET,
+      },
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
@@ -80,17 +86,17 @@ router.post('/spotify', async (req, res) => {
 
     const { access_token, refresh_token } = response.data;
 
-    const profileResponse = await axios.get('https://api.spotify.com/v1/me', {
+    const spotifyUser = await axios.get('https://api.spotify.com/v1/me', {
       headers: {
         Authorization: `Bearer ${access_token}`,
       },
     });
 
-    const spotifyId = profileResponse.data.id;
+    const { id: spotifyId } = spotifyUser.data;
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     user.spotifyId = spotifyId;
@@ -98,10 +104,10 @@ router.post('/spotify', async (req, res) => {
     user.refreshToken = refresh_token;
     await user.save();
 
-    res.json({ message: 'Spotify account linked successfully' });
+    res.json({ message: 'Spotify account linked successfully', user });
   } catch (err) {
-    console.error('Error during Spotify authentication:', err.response?.data || err.message);
-    res.status(err.response?.status || 500).send(err.response?.data || 'Spotify authentication failed');
+    console.error('Error linking Spotify account:', err);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 

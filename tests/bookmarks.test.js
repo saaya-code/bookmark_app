@@ -2,6 +2,10 @@ const request = require('supertest');
 const app = require('../index');
 const mongoose = require('mongoose');
 const Bookmark = require('../models/Bookmark');
+const jwt = require('jsonwebtoken');
+
+// Generate a valid JWT token for testing
+const token = jwt.sign({ userId: '6819faa4c24bb3be2dd8a076' }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
 describe('Bookmark Routes', () => {
   beforeAll(async () => {
@@ -15,15 +19,18 @@ describe('Bookmark Routes', () => {
     await mongoose.connection.close();
   });
 
-  it('should fetch all bookmarks for a user', async () => {
-    const response = await request(app).get(`/api/bookmarks?userId=6819faa4c24bb3be2dd8a076`);
+  it('should fetch all bookmarks for an authenticated user', async () => {
+    const response = await request(app)
+      .get(`/api/bookmarks`)
+      .set('Authorization', `Bearer ${token}`);
+
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body)).toBe(true);
   });
 
-  it('should add a new bookmark', async () => {
+  it('should add a new bookmark for an authenticated user', async () => {
     const newBookmark = {
-      userId: '6819faa4c24bb3be2dd8a076',
+      userId: '6819faa4c24bb3be2dd8a076', // Include the userId field
       spotifyTrackId: 'testTrackId',
       title: 'Test Title',
       description: 'Test Description',
@@ -33,6 +40,7 @@ describe('Bookmark Routes', () => {
 
     const response = await request(app)
       .post('/api/bookmarks')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBookmark);
 
     expect(response.status).toBe(200);
@@ -41,7 +49,7 @@ describe('Bookmark Routes', () => {
     expect(response.body.description).toBe('Test Description');
   });
 
-  it('should update a bookmark', async () => {
+  it('should update a bookmark for an authenticated user', async () => {
     const bookmark = new Bookmark({
       userId: '6819faa4c24bb3be2dd8a076',
       spotifyTrackId: 'testTrackId',
@@ -62,6 +70,7 @@ describe('Bookmark Routes', () => {
 
     const response = await request(app)
       .put(`/api/bookmarks/${bookmark._id}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(updatedData);
 
     expect(response.status).toBe(200);
@@ -69,7 +78,7 @@ describe('Bookmark Routes', () => {
     expect(response.body.description).toBe('Updated Description');
   });
 
-  it('should delete a bookmark', async () => {
+  it('should delete a bookmark for an authenticated user', async () => {
     const bookmark = new Bookmark({
       userId: '6819faa4c24bb3be2dd8a076',
       spotifyTrackId: 'testTrackId',
@@ -78,9 +87,12 @@ describe('Bookmark Routes', () => {
       startTime: 30,
       endTime: 60,
     });
+
     await bookmark.save();
 
-    const response = await request(app).delete(`/api/bookmarks/${bookmark._id}`);
+    const response = await request(app)
+      .delete(`/api/bookmarks/${bookmark._id}`)
+      .set('Authorization', `Bearer ${token}`);
 
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('Bookmark deleted successfully');
