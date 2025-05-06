@@ -2,6 +2,7 @@ const request = require('supertest');
 const app = require('../index');
 const mongoose = require('mongoose');
 const Bookmark = require('../models/Bookmark');
+const User = require('../models/User'); // Added User model import
 const jwt = require('jsonwebtoken');
 
 // Generate a valid JWT token for testing
@@ -13,6 +14,20 @@ describe('Bookmark Routes', () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
+
+    // Ensure the default user exists
+    const userId = '6819faa4c24bb3be2dd8a076';
+    const existingUser = await User.findById(userId);
+
+    if (!existingUser) {
+      const newUser = new User({
+        _id: userId,
+        email: 'default@example.com',
+        username: 'defaultuser',
+        password: 'defaultpassword', // Replace with a secure method
+      });
+      await newUser.save();
+    }
   });
 
   afterAll(async () => {

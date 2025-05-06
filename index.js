@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const axios = require('axios');
 const User = require('./models/User');
 const authMiddleware = require('./middleware/auth');
+const mongoose = require('mongoose');
 
 const app = express();
 
