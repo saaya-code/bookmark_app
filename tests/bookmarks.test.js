@@ -16,14 +16,14 @@ describe('Bookmark Routes', () => {
   });
 
   it('should fetch all bookmarks for a user', async () => {
-    const response = await request(app).get('/api/bookmarks?userId=testUser');
+    const response = await request(app).get(`/api/bookmarks?userId=6819faa4c24bb3be2dd8a076`);
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body)).toBe(true);
   });
 
   it('should add a new bookmark', async () => {
     const newBookmark = {
-      userId: 'testUser',
+      userId: '6819faa4c24bb3be2dd8a076',
       spotifyTrackId: 'testTrackId',
       title: 'Test Title',
       description: 'Test Description',
@@ -43,13 +43,14 @@ describe('Bookmark Routes', () => {
 
   it('should update a bookmark', async () => {
     const bookmark = new Bookmark({
-      userId: 'testUser',
+      userId: '6819faa4c24bb3be2dd8a076',
       spotifyTrackId: 'testTrackId',
       title: 'Old Title',
       description: 'Old Description',
       startTime: 30,
       endTime: 60,
     });
+
     await bookmark.save();
 
     const updatedData = {
@@ -70,7 +71,7 @@ describe('Bookmark Routes', () => {
 
   it('should delete a bookmark', async () => {
     const bookmark = new Bookmark({
-      userId: 'testUser',
+      userId: '6819faa4c24bb3be2dd8a076',
       spotifyTrackId: 'testTrackId',
       title: 'Title to Delete',
       description: 'Description to Delete',

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const bookmarkSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
   spotifyTrackId: { type: String, required: true },
   title: { type: String, required: true },
   description: { type: String },

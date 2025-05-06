@@ -40,6 +40,9 @@ describe("Auth Routes", () => {
       let user = await User.findOne({ spotifyId: mockSpotifyId });
       if (!user) {
         user = new User({
+          email: "test@example.com",
+          username: "testuser",
+          password: "password123",
           spotifyId: mockSpotifyId,
           accessToken: mockAccessToken,
           refreshToken: mockRefreshToken,
@@ -63,5 +66,6 @@ describe("Auth Routes", () => {
       const user = await User.findOne({ spotifyId: invalidSpotifyId });
       expect(user).toBeNull();
     });
+
   });
 });
